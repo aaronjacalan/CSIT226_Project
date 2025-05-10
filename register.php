@@ -18,7 +18,6 @@
       <div class="nav-menu">
         <a href="index.php#home">Home</a>
         <a href="index.php#login">Login</a>
-        <a href="dashboard.php">Dashboard</a>
         <a href="index.php#contact">Contact</a>
         <a href="index.php#about">About</a>
       </div>
@@ -30,53 +29,31 @@
     <form id="registrationForm" method="post" onsubmit="return validateForm()">
       <div class="form-group">
         <label for="txtfirstname">Firstname:</label>
-        <input type="text" id="txtfirstname" name="txtfirstname" value="<?php echo isset($_POST['txtfirstname']) ? htmlspecialchars($_POST['txtfirstname']) : ''; ?>">
+        <input type="text" id="txtfirstname" name="txtfirstname" required>
       </div>
       <div class="form-group">
         <label for="txtlastname">Lastname:</label>
-        <input type="text" id="txtlastname" name="txtlastname" value="<?php echo isset($_POST['txtlastname']) ? htmlspecialchars($_POST['txtlastname']) : ''; ?>">
+        <input type="text" id="txtlastname" name="txtlastname" required>
       </div>
       <div class="form-group">
-        <label for="txtgender">Gender:</label>
-        <select id="txtgender" name="txtgender">
-          <option value="">----</option>
-          <option value="Male" <?php echo (isset($_POST['txtgender']) && $_POST['txtgender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
-          <option value="Female" <?php echo (isset($_POST['txtgender']) && $_POST['txtgender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
-        </select>
+        <label for="txtbirthdate">Birth Date:</label>
+        <input type="date" id="txtbirthdate" name="txtbirthdate" required>
       </div>
       <div class="form-group">
         <label for="txtusertype">User Type:</label>
-        <select id="txtusertype" name="txtusertype">
+        <select id="txtusertype" name="txtusertype" required>
           <option value="">----</option>
-          <option value="student" <?php echo (isset($_POST['txtusertype']) && $_POST['txtusertype'] == 'student') ? 'selected' : ''; ?>>Student</option>
-          <option value="employee" <?php echo (isset($_POST['txtusertype']) && $_POST['txtusertype'] == 'employee') ? 'selected' : ''; ?>>Employee</option>
+          <option value="1">Customer</option>
+          <option value="2">Staff</option>
         </select>
       </div>
       <div class="form-group">
         <label for="txtusername">Username:</label>
-        <input type="text" id="txtusername" name="txtusername" value="<?php echo isset($_POST['txtusername']) ? htmlspecialchars($_POST['txtusername']) : ''; ?>">
+        <input type="text" id="txtusername" name="txtusername" required>
       </div>
       <div class="form-group">
         <label for="txtpassword">Password:</label>
-        <input type="password" id="txtpassword" name="txtpassword">
-      </div>
-      <div class="form-group">
-        <label for="txtprogram">Program:</label>
-        <select id="txtprogram" name="txtprogram">
-          <option value="">----</option>
-          <option value="bsit" <?php echo (isset($_POST['txtprogram']) && $_POST['txtprogram'] == 'bsit') ? 'selected' : ''; ?>>BSIT</option>
-          <option value="bscs" <?php echo (isset($_POST['txtprogram']) && $_POST['txtprogram'] == 'bscs') ? 'selected' : ''; ?>>BSCS</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="txtyearlevel">Year Level:</label>
-        <select id="txtyearlevel" name="txtyearlevel">
-          <option value="">----</option>
-          <option value="1" <?php echo (isset($_POST['txtyearlevel']) && $_POST['txtyearlevel'] == '1') ? 'selected' : ''; ?>>1</option>
-          <option value="2" <?php echo (isset($_POST['txtyearlevel']) && $_POST['txtyearlevel'] == '2') ? 'selected' : ''; ?>>2</option>
-          <option value="3" <?php echo (isset($_POST['txtyearlevel']) && $_POST['txtyearlevel'] == '3') ? 'selected' : ''; ?>>3</option>
-          <option value="4" <?php echo (isset($_POST['txtyearlevel']) && $_POST['txtyearlevel'] == '4') ? 'selected' : ''; ?>>4</option>
-        </select>
+        <input type="password" id="txtpassword" name="txtpassword" required>
       </div>
       <div class="form-submit">
         <button type="submit" name="btnRegister">Register</button>
@@ -114,27 +91,33 @@
     if(isset($_POST['btnRegister'])){        
       $fname = $_POST['txtfirstname'];        
       $lname = $_POST['txtlastname'];
-      $gender = $_POST['txtgender'];
+      $birthdate = $_POST['txtbirthdate'];
       $utype = $_POST['txtusertype'];
       $uname = $_POST['txtusername'];        
       $pword = $_POST['txtpassword'];    
 
       if (preg_match('/^[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/', $pword) && !preg_match('/\s/', $pword)) {
-          $hashedpw = password_hash($pword, PASSWORD_DEFAULT);
-
-          $prog = $_POST['txtprogram'];        
-          $yearlevel = $_POST['txtyearlevel'];        
-
-          $sql1 = "INSERT INTO tbluser (firstname, lastname, gender, usertype, username, password) VALUES ('$fname', '$lname', '$gender', '$utype', '$uname', '$hashedpw')";
-          mysqli_query($connection, $sql1);
-
-          $last_id = mysqli_insert_id($connection);
-
-          $sql2 = "INSERT INTO tblstudent (program, yearlevel, uid) VALUES ('$prog', '$yearlevel', '$last_id')";
-          mysqli_query($connection, $sql2);
-
-          echo "<script>alert('New record saved.');</script>";
-          header("location: dashboard.php");
+          $sql = "INSERT INTO tbluser (fname, lname, birthdate, usertype, username, password) 
+                  VALUES ('$fname', '$lname', '$birthdate', '$utype', '$uname', '$pword')";
+          
+          if(mysqli_query($connection, $sql)) {
+              $userid = mysqli_insert_id($connection);
+              
+              // If user is a customer, add to tblcustomer
+              if($utype == 1) {
+                  $sql2 = "INSERT INTO tblcustomer (userid) VALUES ($userid)";
+                  mysqli_query($connection, $sql2);
+              }
+              // If user is staff, add to tblstaff
+              else if($utype == 2) {
+                  $sql2 = "INSERT INTO tblstaff (userid) VALUES ($userid)";
+                  mysqli_query($connection, $sql2);
+              }
+              
+              echo "<script>alert('Registration successful!'); window.location.href='index.php';</script>";
+          } else {
+              echo "<script>alert('Error: " . mysqli_error($connection) . "');</script>";
+          }
       } else {
           echo "<script>alert('Password must be at least 8 characters long, include special characters and have no spaces.');</script>";
       }

@@ -14,7 +14,7 @@
             border-radius: 10px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
-        .content h2 {
+        .content h1 {
             color: var(--primary-color);
             text-align: center;
             margin-bottom: 20px;
@@ -68,13 +68,30 @@
             max-width: 100%;
             height: auto;
         }
+        /* Add new styles for messages */
+        .message {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
 <body>
 
     <?php    
-        include 'conn.php';
-        include 'readrecords.php';   
+        require_once 'conn.php';
+        require_once 'readrecords.php';   
         //require_once 'includes/header.php'; 
     ?>
 
@@ -87,15 +104,21 @@
             </div>
 
             <div class="nav-menu">
-                <a href="index.php#home">Home</a>
-                <a href="index.php#login">Login</a>
-                <a href="dashboard.php">Dashboard</a>
-                <a href="index.php#contact">Contact</a>
-                <a href="index.php#about">About</a>
+                <a href="index.php#home">Logout</a>
             </div>
 
         </div>
     </nav>
+
+    <?php
+    // Display messages if they exist
+    if (isset($_GET['message'])) {
+        echo '<div class="message success">' . htmlspecialchars($_GET['message']) . '</div>';
+    }
+    if (isset($_GET['error'])) {
+        echo '<div class="message error">' . htmlspecialchars($_GET['error']) . '</div>';
+    }
+    ?>
 
     <div class="charts">
         <div class="chart-container">
@@ -107,7 +130,7 @@
     </div>
     
     <div class="content">
-        <h2>List of Customers</h2>     
+        <h1>List of Customers</h1>     
 
         <div class="buttons">
             <button style="margin-right: 20px;"><a href="register.php">Add New Customer</a></button>
@@ -137,8 +160,8 @@
                     <td><?php echo $row['lname'] ?></td>
                     <td><?php echo $row['birthdate'] ?></td>
                     <td>
-                        <button><a href="editData.php?id=<?php echo $id; ?>">UPDATE</a></button>
-                        <button><a href="delete.php?id=<?php echo $id; ?>">DELETE</a></button>
+                        <button><a href="editData.php?id=<?php echo $row['userid']; ?>">UPDATE</a></button>
+                        <button onclick="return confirmDelete('customer')"><a href="delete.php?id=<?php echo $row['userid']; ?>">DELETE</a></button>
                     </td>
                 </tr>
                 <?php endwhile;?>
@@ -147,10 +170,10 @@
     </div>
 
     <div class="content">
-        <h2>List of Rooms</h2>     
+        <h1>List of Rooms</h1>     
 
         <div class="buttons">
-            <button style="margin-right: 20px;"><a href="addroom.php">Add New Room</a></button>
+            <button style="margin-right: 20px;"><a href="create_room.php">Add New Room</a></button>
         </div> 
 
         <table>
@@ -158,28 +181,76 @@
                 <tr> 
                     <th>Room ID</th> 
                     <th>Customer ID</th> 
+                    <th>Customer Name</th>
                     <th>Availability</th> 
                     <th>Date From</th>                     
                     <th>Date To</th>
                     <th>Room Type</th>
+                    <th>Price</th>
                     <th>Action</th>
                 </tr> 
             </thead>  
             <tbody>
                 <?php
+                    $queryRooms = "SELECT r.*, u.userid, u.fname, u.lname 
+                                   FROM tblroom r 
+                                   LEFT JOIN tblcustomer c ON r.customerid = c.customerid 
+                                   LEFT JOIN tbluser u ON c.userid = u.userid";
+                    $roomResultset = $connection->query($queryRooms);
                     while($room = $roomResultset->fetch_assoc()):
                         $roomId = $room['roomid'];
                 ?>
                 <tr>
                     <td><?php echo $roomId ?></td>
-                    <td><?php echo $room['customerid'] ?></td>
+                    <td><?php echo $room['customerid'] ?: 'None' ?></td>
+                    <td><?php echo $room['customerid'] ? htmlspecialchars($room['fname'] . ' ' . $room['lname']) : 'None' ?></td>
                     <td><?php echo $room['isAvailable'] ? 'Available' : 'Occupied' ?></td>
                     <td><?php echo $room['dateFrom'] ?></td>
                     <td><?php echo $room['dateTo'] ?></td>
                     <td><?php echo $room['roomType'] ?></td>
+                    <td>₱<?php echo number_format($room['price'], 2) ?></td>
                     <td>
                         <button><a href="editRoom.php?id=<?php echo $roomId; ?>">UPDATE</a></button>
-                        <button><a href="deleteRoom.php?id=<?php echo $roomId; ?>">DELETE</a></button>
+                        <button onclick="return confirmDelete('room')"><a href="deleteRoom.php?id=<?php echo $roomId; ?>">DELETE</a></button>
+                    </td>
+                </tr>
+                <?php endwhile;?>
+            </tbody>         
+        </table>
+    </div>
+
+    <div class="content">
+        <h1>List of Staff Members</h1>     
+
+        <div class="buttons">
+            <button style="margin-right: 20px;"><a href="register.php?type=2">Add New Staff</a></button>
+        </div> 
+
+        <table>
+            <thead>
+                <tr> 
+                    <th>Staff ID</th> 
+                    <th>User Type</th>
+                    <th>First Name</th> 
+                    <th>Last Name</th>                     
+                    <th>Birth Date</th>
+                    <th>Action</th>
+                </tr> 
+            </thead>  
+            <tbody>
+                <?php
+                    while($staff = $staffResultset->fetch_assoc()):
+                        $staffId = $staff['userid'];
+                ?>
+                <tr>
+                    <td><?php echo $staffId ?></td>
+                    <td><?php echo $staff['usertype'] ?></td>
+                    <td><?php echo $staff['fname'] ?></td>
+                    <td><?php echo $staff['lname'] ?></td>
+                    <td><?php echo $staff['birthdate'] ?></td>
+                    <td>
+                        <button><a href="editData.php?id=<?php echo $staffId; ?>">UPDATE</a></button>
+                        <button onclick="return confirmDelete('staff')"><a href="delete.php?id=<?php echo $staffId; ?>">DELETE</a></button>
                     </td>
                 </tr>
                 <?php endwhile;?>
@@ -324,6 +395,25 @@
       }
     }
   });
+
+  // Add confirmation dialog for delete buttons
+  function confirmDelete(type) {
+    let message = '';
+    switch(type) {
+        case 'customer':
+            message = 'Are you sure you want to delete this customer? This will also cancel any active room bookings.';
+            break;
+        case 'staff':
+            message = 'Are you sure you want to delete this staff member? This action cannot be undone.';
+            break;
+        case 'room':
+            message = 'Are you sure you want to delete this room? This will remove all booking history for this room.';
+            break;
+        default:
+            message = 'Are you sure you want to delete this item? This action cannot be undone.';
+    }
+    return confirm(message);
+  }
 </script>
 
 </body>

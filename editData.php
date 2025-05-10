@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Edit Student Data</title>
+  <title>Edit User Data</title>
   <link rel="stylesheet" type="text/css" href="css/registerStyle.css">
   <link rel="stylesheet" type="text/css" href="css/indexStyle.css">
   <style>
@@ -68,24 +68,21 @@
     
     // Check if user ID is provided
     if(!isset($_GET['id']) || empty($_GET['id'])) {
-      echo "<div class='container'><h2>Error: No student ID provided</h2>";
-      echo "<p>Please go back to the <a href='dashboard.php'>dashboard</a> and select a student to edit.</p></div>";
+      echo "<div class='container'><h2>Error: No user ID provided</h2>";
+      echo "<p>Please go back to the <a href='dashboard.php'>dashboard</a> and select a user to edit.</p></div>";
       exit();
     }
     
     $userId = $_GET['id'];
     
     // Fetch user data from database
-    $sql = "SELECT u.*, s.program, s.yearlevel 
-            FROM tbluser u 
-            LEFT JOIN tblstudent s ON u.id = s.uid 
-            WHERE u.id = $userId";
+    $sql = "SELECT * FROM tbluser WHERE userid = $userId";
     
     $result = mysqli_query($connection, $sql);
     
     if(mysqli_num_rows($result) == 0) {
-      echo "<div class='container'><h2>Error: Student not found</h2>";
-      echo "<p>Please go back to the <a href='dashboard.php'>dashboard</a> and select a valid student.</p></div>";
+      echo "<div class='container'><h2>Error: User not found</h2>";
+      echo "<p>Please go back to the <a href='dashboard.php'>dashboard</a> and select a valid user.</p></div>";
       exit();
     }
     
@@ -93,61 +90,39 @@
   ?>
 
   <div class="container">
-    <h2>Edit Student Information</h2>
+    <h2>Edit User Information</h2>
     <form id="editForm" method="post" onsubmit="return validateForm()">
       <input type="hidden" name="userId" value="<?php echo $userId; ?>">
       <div class="form-group">
         <label for="txtfirstname">Firstname:</label>
-        <input type="text" id="txtfirstname" name="txtfirstname" value="<?php echo htmlspecialchars($user['firstname']); ?>">
+        <input type="text" id="txtfirstname" name="txtfirstname" value="<?php echo htmlspecialchars($user['fname']); ?>" required>
       </div>
       <div class="form-group">
         <label for="txtlastname">Lastname:</label>
-        <input type="text" id="txtlastname" name="txtlastname" value="<?php echo htmlspecialchars($user['lastname']); ?>">
+        <input type="text" id="txtlastname" name="txtlastname" value="<?php echo htmlspecialchars($user['lname']); ?>" required>
       </div>
       <div class="form-group">
-        <label for="txtgender">Gender:</label>
-        <select id="txtgender" name="txtgender">
-          <option value="">----</option>
-          <option value="Male" <?php echo ($user['gender'] == 'Male') ? 'selected' : ''; ?>>Male</option>
-          <option value="Female" <?php echo ($user['gender'] == 'Female') ? 'selected' : ''; ?>>Female</option>
-        </select>
+        <label for="txtbirthdate">Birth Date:</label>
+        <input type="date" id="txtbirthdate" name="txtbirthdate" value="<?php echo htmlspecialchars($user['birthdate']); ?>" required>
       </div>
       <div class="form-group">
         <label for="txtusertype">User Type:</label>
-        <select id="txtusertype" name="txtusertype">
+        <select id="txtusertype" name="txtusertype" required>
           <option value="">----</option>
-          <option value="student" <?php echo ($user['usertype'] == 'student') ? 'selected' : ''; ?>>Student</option>
-          <option value="employee" <?php echo ($user['usertype'] == 'employee') ? 'selected' : ''; ?>>Employee</option>
+          <option value="1" <?php echo ($user['usertype'] == 1) ? 'selected' : ''; ?>>Customer</option>
+          <option value="2" <?php echo ($user['usertype'] == 2) ? 'selected' : ''; ?>>Staff</option>
         </select>
       </div>
       <div class="form-group">
         <label for="txtusername">Username:</label>
-        <input type="text" id="txtusername" name="txtusername" value="<?php echo htmlspecialchars($user['username']); ?>">
+        <input type="text" id="txtusername" name="txtusername" value="<?php echo htmlspecialchars($user['username']); ?>" required>
       </div>
       <div class="form-group">
         <label for="txtpassword">Password (leave blank to keep current):</label>
         <input type="password" id="txtpassword" name="txtpassword">
       </div>
-      <div class="form-group">
-        <label for="txtprogram">Program:</label>
-        <select id="txtprogram" name="txtprogram">
-          <option value="">----</option>
-          <option value="bsit" <?php echo (isset($user['program']) && $user['program'] == 'bsit') ? 'selected' : ''; ?>>BSIT</option>
-          <option value="bscs" <?php echo (isset($user['program']) && $user['program'] == 'bscs') ? 'selected' : ''; ?>>BSCS</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="txtyearlevel">Year Level:</label>
-        <select id="txtyearlevel" name="txtyearlevel">
-          <option value="">----</option>
-          <option value="1" <?php echo (isset($user['yearlevel']) && $user['yearlevel'] == '1') ? 'selected' : ''; ?>>1</option>
-          <option value="2" <?php echo (isset($user['yearlevel']) && $user['yearlevel'] == '2') ? 'selected' : ''; ?>>2</option>
-          <option value="3" <?php echo (isset($user['yearlevel']) && $user['yearlevel'] == '3') ? 'selected' : ''; ?>>3</option>
-          <option value="4" <?php echo (isset($user['yearlevel']) && $user['yearlevel'] == '4') ? 'selected' : ''; ?>>4</option>
-        </select>
-      </div>
       <div class="form-submit">
-        <button type="submit" name="btnUpdate">Update Student</button>
+        <button type="submit" name="btnUpdate">Update User</button>
         <button type="button" onclick="window.location.href='dashboard.php'">Back to Dashboard</button>
       </div>
     </form>
@@ -181,48 +156,52 @@
       $userId = $_POST['userId'];        
       $fname = $_POST['txtfirstname'];        
       $lname = $_POST['txtlastname'];
-      $gender = $_POST['txtgender'];
+      $birthdate = $_POST['txtbirthdate'];
       $utype = $_POST['txtusertype'];
       $uname = $_POST['txtusername'];        
       $pword = $_POST['txtpassword'];
-      $prog = $_POST['txtprogram'];        
-      $yearlevel = $_POST['txtyearlevel'];
       
       // Update user information
       if(!empty($pword)) {
         // If password is provided, update it after validation
         if (preg_match('/^[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/', $pword) && !preg_match('/\s/', $pword)) {
-          $hashedpw = password_hash($pword, PASSWORD_DEFAULT);
-          $sql1 = "UPDATE tbluser SET firstname='$fname', lastname='$lname', gender='$gender', 
-                   usertype='$utype', username='$uname', password='$hashedpw' WHERE id=$userId";
+          $sql = "UPDATE tbluser SET fname='$fname', lname='$lname', birthdate='$birthdate', 
+                   usertype='$utype', username='$uname', password='$pword' WHERE userid=$userId";
         } else {
           echo "<script>alert('Password must be at least 8 characters long, include special characters and have no spaces.');</script>";
           exit();
         }
       } else {
         // If password is not provided, update other fields only
-        $sql1 = "UPDATE tbluser SET firstname='$fname', lastname='$lname', gender='$gender', 
-                 usertype='$utype', username='$uname' WHERE id=$userId";
+        $sql = "UPDATE tbluser SET fname='$fname', lname='$lname', birthdate='$birthdate', 
+                 usertype='$utype', username='$uname' WHERE userid=$userId";
       }
       
-      $result1 = mysqli_query($connection, $sql1);
+      $result = mysqli_query($connection, $sql);
       
-      // Check if student record exists
-      $checkSql = "SELECT * FROM tblstudent WHERE uid=$userId";
-      $checkResult = mysqli_query($connection, $checkSql);
-      
-      if(mysqli_num_rows($checkResult) > 0) {
-        // Update existing student record
-        $sql2 = "UPDATE tblstudent SET program='$prog', yearlevel='$yearlevel' WHERE uid=$userId";
-      } else {
-        // Create new student record if it doesn't exist
-        $sql2 = "INSERT INTO tblstudent (program, yearlevel, uid) VALUES ('$prog', '$yearlevel', '$userId')";
-      }
-      
-      $result2 = mysqli_query($connection, $sql2);
-      
-      if($result1 && $result2) {
-        echo "<script>alert('Student record updated successfully.'); window.location.href='dashboard.php';</script>";
+      if($result) {
+        // Check if we need to update the user type in customer/staff tables
+        if($utype == 1) {
+          // Check if user exists in customer table
+          $checkCustomer = mysqli_query($connection, "SELECT * FROM tblcustomer WHERE userid=$userId");
+          if(mysqli_num_rows($checkCustomer) == 0) {
+            // Remove from staff if exists
+            mysqli_query($connection, "DELETE FROM tblstaff WHERE userid=$userId");
+            // Add to customer
+            mysqli_query($connection, "INSERT INTO tblcustomer (userid) VALUES ($userId)");
+          }
+        } else if($utype == 2) {
+          // Check if user exists in staff table
+          $checkStaff = mysqli_query($connection, "SELECT * FROM tblstaff WHERE userid=$userId");
+          if(mysqli_num_rows($checkStaff) == 0) {
+            // Remove from customer if exists
+            mysqli_query($connection, "DELETE FROM tblcustomer WHERE userid=$userId");
+            // Add to staff
+            mysqli_query($connection, "INSERT INTO tblstaff (userid) VALUES ($userId)");
+          }
+        }
+        
+        echo "<script>alert('User record updated successfully.'); window.location.href='dashboard.php';</script>";
       } else {
         echo "<script>alert('Error updating record: " . mysqli_error($connection) . "');</script>";
       }

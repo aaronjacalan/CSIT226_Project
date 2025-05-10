@@ -20,7 +20,6 @@
                 <div class="nav-menu">
                     <a href="index.php#home">Home</a>
                     <a href="index.php#login">Login</a>
-                    <a href="dashboard.php">Dashboard</a>
                     <a href="index.php#contact">Contact</a>
                     <a href="index.php#about">About</a>
                 </div>
@@ -42,8 +41,11 @@
 
             <section id="login" class="section" style="margin-top: 30px;">
                 <h2 class="section-title">Login to Dashboard</h2>
+                <?php if (isset($_GET['login_error'])): ?>
+                    <p style="color: red; text-align: center;">Invalid username or password!</p>
+                <?php endif; ?>
 
-                <form id="login">
+                <form id="login" method="post" action="login.php">
                     <div class="form-group">
                         <input type="text" id="username" name="username" placeholder="Username" required>
                     </div>
@@ -51,9 +53,8 @@
                         <input type="password" id="password" name="password" placeholder="Password" required>
                     </div>
                     <p class="centered_text"><a href="#">Forgot Password?</a></p>
-                    <button class="new-button" type="submit" style="width: 100%; color: ">Login</button>
+                    <button class="new-button" type="submit" style="width: 100%;">Login</button>
                 </form>
-
             </section>
 
             <section id="register" class="section" style="margin: 0 auto; text-align: center;">
